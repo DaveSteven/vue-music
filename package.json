@@ -11,19 +11,23 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "vue": "^2.5.2",
-    "vue-router": "^3.0.1",
+    "axios": "^0.18.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-runtime": "^6.26.0",
+    "better-scroll": "^1.10.2",
+    "cssnano": "^3.10.0",
+    "cssnano-preset-advanced": "^4.0.0-rc.2",
+    "fastclick": "^1.0.6",
+    "jsonp": "^0.2.1",
     "postcss-aspect-ratio-mini": "^0.0.2",
     "postcss-cssnext": "^3.1.0",
     "postcss-px-to-viewport": "^0.0.3",
     "postcss-viewport-units": "^0.1.4",
     "postcss-write-svg": "^3.0.1",
-    "cssnano": "^3.10.0",
-    "cssnano-preset-advanced": "^4.0.0-rc.2",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.2",
-    "axios": "^0.18.0",
-    "better-scroll": "^1.9.1"
+    "vue": "^2.5.2",
+    "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
