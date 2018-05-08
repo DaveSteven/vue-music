@@ -11,7 +11,7 @@
         </ul>
       </li>
     </ul>
-    <div class="list-shortcut" @touchstart="onShortcutTouchStart">
+    <div class="list-shortcut" @touchstart="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
         <li class="item" v-for="(item, index) in shortcutList" :key="index" :data-index="index">{{ item }}</li>
       </ul>
@@ -22,6 +22,7 @@
 <script>
 import Scroll from '@/base/scroll/scroll';
 import { getData } from '@/common/js/dom';
+
 export default {
   props: {
     data: {
@@ -41,10 +42,36 @@ export default {
   methods: {
     onShortcutTouchStart(e) {
       let anchorIndex = getData(e.target, 'index');
-      console.log(anchorIndex);
-      console.log(this.$refs.listGroup[anchorIndex]);
-      this.$refs.listview.scrollToElement(this.$refs.listGroup[anchorIndex], 0);
+      let firstTouch = e.touches[0];
+      this.touch.y1 = firstTouch.pageY;
+      this.touch.anchorIndex = anchorIndex;
+      this._scrolTo(anchorIndex);
+    },
+    onShortcutTouchMove(e) {
+      let firstTouch = e.touches[0];
+      this.touch.y2 = firstTouch.pageY;
+      let delta = (this.touch.y2 - this.touch.y1) / this.anchorHeight | 0;
+      let anchorIndex = parseInt(this.touch.anchorIndex) + delta;
+      this._scrolTo(anchorIndex);
+    },
+    _scrolTo(index) {
+      this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0);
+    },
+    caculateSize() {
+      this.deviceWidth = document.body.clientWidth;
+      this.anchorHeight = 34 / (750 / 100) * (this.deviceWidth / 100);
     }
+  },
+  created() {
+    this.touch = {};
+    this.caculateSize();
+  },
+  mounted() {
+    window.addEventListener('resize', () => {
+      if (this.deviceWidth) {
+        this.caculateSize();
+      }
+    });
   },
   components: {
     Scroll

@@ -26,12 +26,11 @@ export default {
     _getSingerList() {
       getSingerList().then(res => {
         if (res.code === ERR_OK) {
-          this.singers = this._nomalizeSinger(res.data.list);
-          console.log(this.singers);
+          this.singers = this._normalizeSinger(res.data.list);
         }
       });
     },
-    _nomalizeSinger(list) {
+    _normalizeSinger(list) {
       let map = {
         hot: {
           title: HOT_NAME,
