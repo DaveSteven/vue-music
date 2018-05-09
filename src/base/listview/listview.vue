@@ -11,7 +11,7 @@
       <li ref="listGroup" v-for="(group, index) in data" class="list-group" :key="index">
         <h2 class="list-group-title">{{ group.title }}</h2>
         <ul>
-          <li v-for="item in group.items" :key="item.id" class="list-group-item">
+          <li v-for="item in group.items" :key="item.id" class="list-group-item" @click="selectItem(item)">
             <img class="avatar" v-lazy="item.avatar">
             <span class="name">{{ item.name }}</span>
           </li>
@@ -20,15 +20,31 @@
     </ul>
     <div class="list-shortcut" @touchstart="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
-        <li class="item" v-for="(item, index) in shortcutList" :key="index" :data-index="index">{{ item }}</li>
+        <li
+          class="item"
+          v-for="(item, index) in shortcutList"
+          :key="index" 
+          :data-index="index"
+          :class="{'current': currentIndex === index}"
+        >
+        {{ item }}
+        </li>
       </ul>
+    </div>
+    <div v-show="fixedTitle" class="list-fixed" ref="fixedTitle">
+      <div class="fixed-title">{{ fixedTitle }}</div>
+    </div>
+    <div v-if="!data.length" class="loading-container">
+      <loading></loading>
     </div>
   </scroll>
 </template>
 
 <script>
 import Scroll from '@/base/scroll/scroll';
+import Loading from '@/base/loading/loading';
 import { getData } from '@/common/js/dom';
+import { calculateSize } from '@/common/js/size';
 
 export default {
   props: {
@@ -43,7 +59,8 @@ export default {
     return {
       listenScroll: false,
       scrollY: -1,
-      currentIndex: 1
+      currentIndex: 0,
+      diff: -1
     };
   },
   computed: {
@@ -51,9 +68,18 @@ export default {
       return this.data.map((group) => {
         return group.title.substr(0, 1);
       });
+    },
+    fixedTitle() {
+      if (this.scrollY > 0) {
+        return '';
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : '';
     }
   },
   methods: {
+    selectItem(item) {
+      this.$emit('select', item);
+    },
     onShortcutTouchStart(e) {
       let anchorIndex = getData(e.target, 'index');
       let firstTouch = e.touches[0];
@@ -72,11 +98,20 @@ export default {
       this.scrollY = pos.y;
     },
     _scrolTo(index) {
+      if (!index && index !== 0) {
+        return;
+      }
+      if (index < 0) {
+        index = 0;
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2;
+      }
+      this.scrollY = -this.listHeight[index];
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0);
     },
     _calculateSize() {
-      this.deviceWidth = document.body.clientWidth;
-      this.anchorHeight = 34 / (750 / 100) * (this.deviceWidth / 100);
+      this.anchorHeight = calculateSize(34);
+      this.titleHeight = calculateSize(60);
     },
     _calculateHeight() {
       this.listHeight = [];
@@ -111,19 +146,36 @@ export default {
     },
     scrollY(newY) {
       const listHeight = this.listHeight;
-      for (let i = 0; i < listHeight.length; i++) {
+      // 当滚动到顶部，newY > 0
+      if (newY > 0) {
+        this.currentIndex = 0;
+        return;
+      }
+      // 在中间部分滚动
+      for (let i = 0; i < listHeight.length - 1; i++) {
         let height1 = listHeight[i];
         let height2 = listHeight[i + 1];
-        if (!height2 || (-newY > height1 && -newY < height2)) {
+        if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i;
+          this.diff = height2 + newY;
           return;
         }
       }
-      this.currentIndex = 0;
+      // 当滚动到底部，-newY > 最后一个元素的上限
+      this.currentIndex = listHeight.length - 2;
+    },
+    diff(newVal) {
+      let fixedTop = (newVal > 0 && newVal < this.titleHeight) ? newVal - this.titleHeight : 0;
+      if (this.fixedTop === fixedTop) {
+        return;
+      }
+      this.fixedTop = fixedTop;
+      this.$refs.fixedTitle.style.transform = `translate3d(0, ${fixedTop}px, 0)`;
     }
   },
   components: {
-    Scroll
+    Scroll,
+    Loading
   }
 };
 </script>
