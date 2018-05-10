@@ -12,7 +12,7 @@
         <h2 class="list-group-title">{{ group.title }}</h2>
         <ul>
           <li v-for="item in group.items" :key="item.id" class="list-group-item" @click="selectItem(item)">
-            <img class="avatar" v-lazy="item.avatar">
+            <div class="avatar"><img v-lazy="item.avatar" alt=""></div>
             <span class="name">{{ item.name }}</span>
           </li>
         </ul>
@@ -205,7 +205,8 @@ export default {
         .avatar
           width: 100px
           height: 100px
-          border-radius: 50%
+          img
+            border-radius: 50%
         .name
           margin-left: 40px
           color: $color-text-l
