@@ -10,6 +10,8 @@ export const sequenceList = state => state.sequenceList;
 
 export const mode = state => state.mode;
 
+export const songsUrl = state => state.songsUrl;
+
 export const currentIndex = state => state.currentIndex;
 
 export const currentSong = (state) => {
