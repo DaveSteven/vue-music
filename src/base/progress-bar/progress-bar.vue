@@ -52,7 +52,10 @@ export default {
       this._triggerPercent();
     },
     progressClick(e) {
-      this._offset(e.offsetX);
+      const rect = this.$refs.progressBar.getBoundingClientRect();
+      const offsetWidth = e.pageX - rect.left;
+      // 点击progressBtn的时候，ex.offsetX获取不对
+      this._offset(offsetWidth);
       this._triggerPercent();
     },
     _triggerPercent() {
@@ -63,14 +66,19 @@ export default {
     _offset(offsetWidth) {
       this.$refs.progress.style.width = `${offsetWidth}px`;
       this.$refs.progressBtn.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`;
+    },
+    _calculateMoveDistance(percent) {
+      const barWidth = this.$refs.progressBar.clientWidth - PROGRESS_BTN_WIDTH;
+      const offsetWidth = percent * barWidth;
+      this._offset(offsetWidth);
     }
   },
   watch: {
     percent(newPercent) {
       if (newPercent >= 0 && !this.touch.initiated) {
-        const barWidth = this.$refs.progressBar.clientWidth - PROGRESS_BTN_WIDTH;
-        const offsetWidth = newPercent * barWidth;
-        this._offset(offsetWidth);
+        this._calculateMoveDistance(newPercent);
+      } else {
+        this._calculateMoveDistance(newPercent);
       }
     }
   }

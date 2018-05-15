@@ -36,8 +36,8 @@
             <span class="time time-r">{{ format(currentSong.duration) }}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
               <i class="icon-prev" @click="prev"></i>
@@ -74,17 +74,19 @@
         </div>
       </div>    
     </transition>
-    <audio ref="audio" :src="songUrl" @canplay="ready" @error="error" @timeupdate="updateTime"></audio>
+    <audio ref="audio" :src="songUrl" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
 <script>
+import { mapGetters, mapMutations } from 'vuex';
 import ProgressBar from '@/base/progress-bar/progress-bar';
 import ProgressCircle from '@/base/progress-circle/progress-circle';
-import { mapGetters, mapMutations } from 'vuex';
 import animations from 'create-keyframe-animation';
-import { calculateSize } from '@/common/js/size';
-import { prefixStyle } from '@/common/js/dom';
+import { shuffle } from 'common/js/util';
+import { playMode } from 'common/js/config';
+import { calculateSize } from 'common/js/size';
+import { prefixStyle } from 'common/js/dom';
 import { getSongUrl } from '@/api/song';
 import { ERR_OK } from '@/api/config';
 
@@ -97,6 +99,9 @@ export default {
     },
     miniIcon() {
       return this.playing ? 'icon-pause-mini' : 'icon-play-mini';
+    },
+    iconMode() {
+      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random';
     },
     cdCls() {
       return this.playing ? 'play' : 'play pause';
@@ -113,7 +118,9 @@ export default {
       'currentSong',
       'currentIndex',
       'playing',
-      'songsUrl'
+      'songsUrl',
+      'mode',
+      'sequenceList'
     ])
   },
   data() {
@@ -126,6 +133,13 @@ export default {
   methods: {
     togglePlaying() {
       this.setPlayingState(!this.playing);
+    },
+    end() {
+      if (this.mode === playMode.loop) {
+        this.loop();
+      } else {
+        this.next();
+      }
     },
     prev() {
       if (!this.songReady) {
@@ -154,6 +168,10 @@ export default {
         this.togglePlaying();
       }
       this.songReady = false;
+    },
+    loop() {
+      this.$refs.audio.currentTime = 0;
+      this.$refs.audio.play();
     },
     ready() {
       this.songReady = true;
@@ -222,6 +240,24 @@ export default {
       this.$refs.cdWrapper.style.transition = '';
       this.$refs.cdWrapper.style[transform] = '';
     },
+    changeMode() {
+      const mode = (this.mode + 1) % 3;
+      this.setPlayMode(mode);
+      let list = null;
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList);
+      } else {
+        list = this.sequenceList;
+      }
+      this.resetCurrentIndex(list);
+      this.setPlayList(list);
+    },
+    resetCurrentIndex(list) {
+      let index = list.findIndex((item) => {
+        return item.id === this.currentSong.id;
+      });
+      this.setCurrentIndex(index);
+    },
     _pad(num, n = 2) {
       let len = num.toString().length;
       while (len < n) {
@@ -233,6 +269,7 @@ export default {
     _getSongUrl(mid) {
       if (this.songsUrl[mid]) {
         this.songUrl = this.songsUrl[mid];
+        this.$root.percent = 0;
         return;
       }
       getSongUrl(mid).then(res => {
@@ -241,6 +278,7 @@ export default {
           const vkey = res.data.items[0].vkey;
           const url = `http://dl.stream.qqmusic.qq.com/${filename}?vkey=${vkey}&guid=7404459500&uin=0&fromtag=66`;
           this.songUrl = url;
+          this.$root.percent = 0;
           this.setSongsUrl({
             key: mid,
             url
@@ -263,7 +301,9 @@ export default {
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
       setCurrentIndex: 'SET_CURRENT_INDEX',
-      setSongsUrl: 'SET_SONGS_URL'
+      setSongsUrl: 'SET_SONGS_URL',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAYLIST'
     })
   },
   watch: {
