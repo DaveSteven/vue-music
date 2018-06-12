@@ -433,7 +433,7 @@ export default {
       const mid = this.playlist[index].mid;
       this.getSongURL();
     },
-    songUrl() {
+    currentSongUrl() {
       if (this.currentLyric) {
         this.currentLyric.stop();
       }
@@ -445,7 +445,7 @@ export default {
     playing(newState) {
       this.$nextTick(() => {
         const audio = this.$refs.audio;
-        newState && this.songUrl ? audio.play() : audio.pause();
+        newState && this.currentSongUrl ? audio.play() : audio.pause();
       });
     }
   },
