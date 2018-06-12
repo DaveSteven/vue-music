@@ -18,16 +18,44 @@
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
-        <div class="middle">
-          <div class="middle-l">
+        <div
+          class="middle"
+          @touchstart.prevent="middleTouchStart"
+          @touchmove.prevent="middleTouchMove"
+          @touchend="middleTouchEnd"
+        >
+          <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd" :class="cdCls">
                 <img :src="currentSong.image" class="image">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{ playingLyric }}</div>
+            </div>
           </div>
+          <scroll
+            :data="currentLyric && currentLyric.lines"
+            class="middle-r" 
+            ref="lyricList"
+          >
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p ref="lyricLine"
+                   class="text"
+                   :class="{'current': currentLineNumber === index}"
+                   v-for="(line, index) in currentLyric.lines"
+                   :key="line.time"
+                >{{ line.txt }}</p>
+              </div>
+            </div>
+          </scroll>
         </div>
         <div class="bottom">
+          <div class="dot-wrapper">
+            <span class="dot" :class="{'active': currentShow === 'cd'}"></span>
+            <span class="dot" :class="{'active': currentShow === 'lyric'}"></span>
+          </div>
           <div class="progress-wrapper">
             <span class="time time-l">{{ format(currentTime) }}</span>
             <div class="progress-bar-wrapper">
@@ -79,6 +107,7 @@
 </template>
 
 <script>
+import { ERR_OK } from '@/api/config';
 import { mapGetters, mapMutations } from 'vuex';
 import ProgressBar from '@/base/progress-bar/progress-bar';
 import ProgressCircle from '@/base/progress-circle/progress-circle';
@@ -88,9 +117,11 @@ import { playMode } from 'common/js/config';
 import { calculateSize } from 'common/js/size';
 import { prefixStyle } from 'common/js/dom';
 import { getSongUrl } from '@/api/song';
-import { ERR_OK } from '@/api/config';
+import Lyric from 'lyric-parser';
+import Scroll from '@/base/scroll/scroll';
 
 const transform = prefixStyle('transform');
+const transitionDuration = prefixStyle('transitionDuration');
 
 export default {
   computed: {
@@ -127,12 +158,24 @@ export default {
     return {
       songUrl: '',
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      currentLyric: null,
+      currentLineNumber: 0,
+      currentShow: 'cd',
+      playingLyric: ''
     };
   },
   methods: {
     togglePlaying() {
+      if (!this.songReady) {
+        return;
+      }
+
       this.setPlayingState(!this.playing);
+
+      if (this.currentLyric) {
+        this.currentLyric.togglePlay();
+      }
     },
     end() {
       if (this.mode === playMode.loop) {
@@ -172,6 +215,9 @@ export default {
     loop() {
       this.$refs.audio.currentTime = 0;
       this.$refs.audio.play();
+      if (this.currentLyric) {
+        this.currentLyric.seek(0);
+      }
     },
     ready() {
       this.songReady = true;
@@ -189,9 +235,13 @@ export default {
       return `${minute}:${second}`;
     },
     onProgressBarChange(percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent;
+      const currentTime = this.currentSong.duration * percent;
+      this.$refs.audio.currentTime = currentTime;
       if (!this.playing) {
         this.togglePlaying();
+      }
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000);
       }
     },
     back() {
@@ -258,6 +308,88 @@ export default {
       });
       this.setCurrentIndex(index);
     },
+    getLyric() {
+      this.currentSong.getLyric().then((lyric) => {
+        this.currentLyric = new Lyric(lyric, this.handleLyric);
+        if (this.playing) {
+          this.currentLyric.play();
+        }
+      }).catch(() => {
+        this.currentLyric = null;
+        this.playingLyric = '';
+        this.currentLineNumber = 0;
+      });
+    },
+    handleLyric({lineNum, txt}) {
+      this.currentLineNumber = lineNum;
+      if (lineNum > 5) {
+        let lineEl = this.$refs.lyricLine[lineNum - 5];
+        this.$refs.lyricList.scrollToElement(lineEl, 1000);
+      } else {
+        this.$refs.lyricList.scrollToElement(0, 0, 1000);
+      }
+      this.playingLyric = txt;
+    },
+    getSongURL() {
+      this.currentSong.getSongURL().then((url) => {
+        this.songUrl = url;
+      });
+    },
+    middleTouchStart(e) {
+      this.touch.initiated = true;
+      const touch = e.touches[0];
+      this.touch.startX = touch.pageX;
+      this.touch.startY = touch.pageY;
+    },
+    middleTouchMove(e) {
+      if (!this.touch.initiated) {
+        return;
+      }
+      const touch = e.touches[0];
+      const deltaX = touch.pageX - this.touch.startX;
+      const deltaY = touch.pageY - this.touch.startY;
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        return;
+      }
+      const left = this.currentShow === 'cd' ? 0 : -window.innerWidth;
+      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX));
+      this.touch.percent = Math.abs(offsetWidth / window.innerWidth);
+
+      const lyricList = this.$refs.lyricList.$el;
+      lyricList.style[transitionDuration] = 0;
+      lyricList.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`;
+      this.$refs.middleL.style.opacity = 1 - this.touch.percent;
+      this.$refs.middleL.style[transitionDuration] = 0;
+    },
+    middleTouchEnd() {
+      let offsetWidth = 0;
+      let opacity = 0;
+      if (this.currentShow === 'cd') {
+        if (this.touch.percent > 0.1) {
+          offsetWidth = -window.innerWidth;
+          opacity = 0;
+          this.currentShow = 'lyric';
+        } else {
+          opacity = 1;
+          offsetWidth = 0;
+        }
+      } else {
+        if (this.touch.percent < 0.9) {
+          offsetWidth = 0;
+          opacity = 1;
+          this.currentShow = 'cd';
+        } else {
+          opacity = 0;
+          offsetWidth = -window.innerWidth;
+        }
+      }
+      const lyricList = this.$refs.lyricList.$el;
+      const time = 300;
+      lyricList.style[transitionDuration] = `${time}ms`;
+      lyricList.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`;
+      this.$refs.middleL.style[transitionDuration] = `${time}ms`;
+      this.$refs.middleL.style.opacity = opacity;
+    },
     _pad(num, n = 2) {
       let len = num.toString().length;
       while (len < n) {
@@ -265,26 +397,6 @@ export default {
         len++;
       }
       return num;
-    },
-    _getSongUrl(mid) {
-      if (this.songsUrl[mid]) {
-        this.songUrl = this.songsUrl[mid];
-        this.$root.percent = 0;
-        return;
-      }
-      getSongUrl(mid).then(res => {
-        if (res.code === ERR_OK) {
-          const filename = res.data.items[0].filename;
-          const vkey = res.data.items[0].vkey;
-          const url = `http://dl.stream.qqmusic.qq.com/${filename}?vkey=${vkey}&guid=7404459500&uin=0&fromtag=66`;
-          this.songUrl = url;
-          this.$root.percent = 0;
-          this.setSongsUrl({
-            key: mid,
-            url
-          });
-        }
-      });
     },
     _getPosAndScale() {
       const targetWidth = calculateSize(80);
@@ -309,11 +421,15 @@ export default {
   watch: {
     currentIndex(index) {
       const mid = this.playlist[index].mid;
-      this._getSongUrl(mid);
+      this.getSongURL();
     },
     songUrl() {
+      if (this.currentLyric) {
+        this.currentLyric.stop();
+      }
       this.$nextTick(() => {
         this.$refs.audio.play();
+        this.getLyric();
       });
     },
     playing(newState) {
@@ -325,10 +441,12 @@ export default {
   },
   created() {
     this.radius = calculateSize(64);
+    this.touch = {};
   },
   components: {
     ProgressBar,
-    ProgressCircle
+    ProgressCircle,
+    Scroll
   }
 };
 </script>
