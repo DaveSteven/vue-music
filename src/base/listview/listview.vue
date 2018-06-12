@@ -7,6 +7,7 @@
     ref="listview"
     @scroll="scroll"
   >
+    <!-- 歌手列表，根据字母分组 -->
     <ul>
       <li ref="listGroup" v-for="(group, index) in data" class="list-group" :key="index">
         <h2 class="list-group-title">{{ group.title }}</h2>
@@ -18,6 +19,7 @@
         </ul>
       </li>
     </ul>
+    <!-- 字母列表，用来快速定位 -->
     <div class="list-shortcut" @touchstart="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
         <li

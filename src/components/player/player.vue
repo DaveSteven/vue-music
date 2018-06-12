@@ -1,5 +1,6 @@
 <template>
   <div class="player" v-show="playlist.length">
+    <!-- 播放器 -->
     <transition
       name="normal"
       @enter="enter"
@@ -51,6 +52,7 @@
             </div>
           </scroll>
         </div>
+        <!-- 歌曲控制组件 -->
         <div class="bottom">
           <div class="dot-wrapper">
             <span class="dot" :class="{'active': currentShow === 'cd'}"></span>
@@ -83,6 +85,7 @@
         </div>
       </div>
     </transition>
+    <!-- 迷你播放器 -->
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
@@ -102,7 +105,8 @@
         </div>
       </div>    
     </transition>
-    <audio ref="audio" :src="songUrl" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <!-- html5 audio组件，播放音乐 -->
+    <audio ref="audio" :src="currentSongUrl" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -149,14 +153,13 @@ export default {
       'currentSong',
       'currentIndex',
       'playing',
-      'songsUrl',
       'mode',
       'sequenceList'
     ])
   },
   data() {
     return {
-      songUrl: '',
+      currentSongUrl: '',
       songReady: false,
       currentTime: 0,
       currentLyric: null,
@@ -188,13 +191,17 @@ export default {
       if (!this.songReady) {
         return;
       }
-      let index = this.currentIndex - 1;
-      if (index < 0) {
-        index = this.playlist.length - 1;
-      }
-      this.setCurrentIndex(index);
-      if (!this.playing) {
-        this.togglePlaying();
+      if (this.playlist.length === 1) {
+        this.loop();
+      } else {
+        let index = this.currentIndex - 1;
+        if (index < 0) {
+          index = this.playlist.length - 1;
+        }
+        this.setCurrentIndex(index);
+        if (!this.playing) {
+          this.togglePlaying();
+        }
       }
       this.songReady = false;
     },
@@ -202,13 +209,17 @@ export default {
       if (!this.songReady) {
         return;
       }
-      let index = this.currentIndex + 1;
-      if (index === this.playlist.length) {
-        index = 0;
-      }
-      this.setCurrentIndex(index);
-      if (!this.playing) {
-        this.togglePlaying();
+      if (this.playlist.length === 1) {
+        this.loop();
+      } else {
+        let index = this.currentIndex + 1;
+        if (index === this.playlist.length) {
+          index = 0;
+        }
+        this.setCurrentIndex(index);
+        if (!this.playing) {
+          this.togglePlaying();
+        }
       }
       this.songReady = false;
     },
@@ -332,7 +343,7 @@ export default {
     },
     getSongURL() {
       this.currentSong.getSongURL().then((url) => {
-        this.songUrl = url;
+        this.currentSongUrl = url;
       });
     },
     middleTouchStart(e) {
@@ -413,7 +424,6 @@ export default {
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
       setCurrentIndex: 'SET_CURRENT_INDEX',
-      setSongsUrl: 'SET_SONGS_URL',
       setPlayMode: 'SET_PLAY_MODE',
       setPlayList: 'SET_PLAYLIST'
     })
@@ -427,10 +437,10 @@ export default {
       if (this.currentLyric) {
         this.currentLyric.stop();
       }
-      this.$nextTick(() => {
+      setTimeout(() => {
         this.$refs.audio.play();
         this.getLyric();
-      });
+      }, 1000);
     },
     playing(newState) {
       this.$nextTick(() => {
