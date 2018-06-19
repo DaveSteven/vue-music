@@ -40,8 +40,12 @@ import { ERR_OK } from '@/api/config';
 import BScroll from 'better-scroll';
 import Scroll from '@/base/scroll/scroll';
 import Loading from '@/base/loading/loading';
+import { playlistMixin } from 'common/js/mixin';
 
 export default {
+  mixins: [
+    playlistMixin
+  ],
   components: {
     Slider,
     Scroll,
@@ -54,6 +58,11 @@ export default {
     };
   },
   methods: {
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : '0';
+      this.$refs.recommend.style.bottom = bottom;
+      this.$refs.scroll.refresh();
+    },
     _getRecommend() {
       getRecommend().then(res => {
         if (res.code === ERR_OK) {
@@ -83,60 +92,72 @@ export default {
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-  @import '~common/stylus/variable';
-  .recommend
-    position: fixed
-    width: 100%
-    top: 176px
-    bottom: 0
+@import '~common/stylus/variable';
 
-    .recommend-content
-      height: 100%
-      overflow: hidden
+.recommend {
+  position: fixed;
+  width: 100%;
+  top: 176px;
+  bottom: 0;
 
-      .slider-wrapper
-        position: relative
-        width: 100%
-        overflow: hidden
+  .recommend-content {
+    height: 100%;
+    overflow: hidden;
 
-      .recommend-list
-        .list-title
-          height: 130px
-          line-height: 130px
-          text-align: center
-          font-size: $font-size-medium
-          color: $color-theme
+    .slider-wrapper {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
 
-        .item
-          display: flex
-          box-sizing: border-box
-          align-items: center
-          padding: 0 40px 40px 40px
+    .recommend-list {
+      .list-title {
+        height: 130px;
+        line-height: 130px;
+        text-align: center;
+        font-size: $font-size-medium;
+        color: $color-theme;
+      }
 
-          .icon 
-            flex: 0 0 120px;
-            width: 120px;
-            padding-right: 40px
+      .item {
+        display: flex;
+        box-sizing: border-box;
+        align-items: center;
+        padding: 0 40px 40px 40px;
 
-          .text
-            display: flex
-            flex-direction: column
-            justify-content: center
-            flex: 1
-            line-height: 40px
-            overflow: hidden
-            font-size: $font-size-medium
+        .icon {
+          flex: 0 0 120px;
+          width: 120px;
+          padding-right: 40px;
+        }
 
-            .name
-              margin-bottom: 20px
-              color: $color-text
+        .text {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          flex: 1;
+          line-height: 40px;
+          overflow: hidden;
+          font-size: $font-size-medium;
 
-            .desc 
-              color: $color-text-d
+          .name {
+            margin-bottom: 20px;
+            color: $color-text;
+          }
 
-      .loading-container
-        position: absolute
-        width: 100%
-        top: 50%
-        transform: translateY(-50%)
+          .desc {
+            color: $color-text-d;
+          }
+        }
+      }
+    }
+
+    .loading-container {
+      position: absolute;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+}
 </style>

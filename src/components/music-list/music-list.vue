@@ -32,12 +32,16 @@ import Loading from '@/base/loading/loading';
 import { calculateSize } from '@/common/js/size';
 import { prefixStyle } from 'common/js/dom';
 import { mapActions } from 'vuex';
+import { playlistMixin } from 'common/js/mixin';
 
 const RESERVED_HEIGHT = calculateSize(80);
 const transform = prefixStyle('transform');
 const backdrop = prefixStyle('backdrop-filter');
 
 export default {
+  mixins: [
+    playlistMixin
+  ],
   props: {
     bgImage: {
       type: String,
@@ -74,6 +78,11 @@ export default {
     this.$refs.list.$el.style.top = `${this.imageHeight}px`;
   },
   methods: {
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : '';
+      this.$refs.list.$el.style.bottom = bottom;
+      this.$refs.list.refresh();
+    },
     scroll(pos) {
       this.scrollY = pos.y;
     },
