@@ -46,7 +46,8 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           headers,
           params: req.query
         }).then((response) => {
-          var ret = response.data;
+          let ret = response.data;
+          
           if (typeof ret === 'string') {
             const reg = /^\w+\(({[^()]+})\)$/;
             const matches = ret.match(reg);
@@ -57,6 +58,23 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           res.json(ret);
         }).catch((e) => {
           console.log(e);
+        })
+      });
+      app.get('/api/getSongList', (req, res) => {
+        const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg';
+        axios.get(url, {
+          headers,
+          params: req.query
+        }).then((response) => {
+          const reg = /{.+}/;
+          let ret = response.data;
+          if (typeof ret === 'string') {
+            const matches = ret.match(reg);
+            if (matches) {
+              ret = JSON.parse(matches[0]);
+            }
+          }
+          res.json(ret);
         })
       })
     },

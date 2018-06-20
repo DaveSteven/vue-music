@@ -24,7 +24,10 @@ const mutations = {
   },
   [types.SET_SONGS_URL](state, {key, url}) {
     state.songsUrl[key] = url;
-  }
+  },
+  [types.SET_DISC](state, disc) {
+    state.disc = disc;
+  },
 };
 
 export default mutations;

@@ -263,7 +263,6 @@ export default {
     },
     enter(el, done) {
       const {x, y, scale} = this._getPosAndScale();
-
       let animation = {
         0: {
           transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
@@ -294,7 +293,7 @@ export default {
     leave(el, done) {
       this.$refs.cdWrapper.style.transition = 'all .4s';
       const {x, y, scale} = this._getPosAndScale();
-      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px, ${y}px, 0)`;
+      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
       this.$refs.cdWrapper.addEventListener('transitionend', done);
     },
     afterLeave() {
@@ -417,7 +416,7 @@ export default {
       const width = window.innerWidth * 0.8;
       const scale = targetWidth / width;
       const x = -(window.innerWidth / 2 - paddingLeft);
-      const y = window.innerHeight - paddingBottom;
+      const y = window.innerHeight - paddingTop - width / 2 - paddingBottom;
       return {x, y, scale};
     },
     ...mapMutations({
