@@ -75,6 +75,30 @@ const devWebpackConfig = merge(baseWebpackConfig, {
             }
           }
           res.json(ret);
+        }).catch((e) => {
+          console.log(e);
+        })
+      });
+      app.get('/api/getTopList', (req, res) => {
+        const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_myqq_toplist.fcg';
+        axios.get(url, {
+          headers,
+          params: req.query
+        }).then((response) => {
+          res.json(response.data);
+        }).catch((e) => {
+          console.log(e);
+        })
+      });
+      app.get('/api/rank/getMusicList', (req, res) => {
+        const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg';
+        axios.get(url, {
+          headers,
+          params: req.query
+        }).then((response) => {
+          res.json(response.data);
+        }).catch((e) => {
+          console.log(e);
         })
       })
     },
