@@ -100,6 +100,17 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         }).catch((e) => {
           console.log(e);
         })
+      });
+      app.get('/api/getHotKey', (req, res) => {
+        const url = 'https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg';
+        axios.get(url, {
+          headers,
+          params: req.query
+        }).then((response) => {
+          res.json(response.data);
+        }).catch((e) => {
+          console.log(e);
+        })
       })
     },
     clientLogLevel: 'warning',
