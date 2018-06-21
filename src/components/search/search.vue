@@ -15,9 +15,10 @@
         </div>
       </div>
     </div>
-    <div class="search-result" v-show="query">
-      <suggest :query="query"></suggest>
+    <div class="search-result" ref="searchResult" v-show="query">
+      <suggest :query="query" @listScroll="blurInput" ref="suggest"></suggest>
     </div>
+    <router-view/>
   </div>
 </template>
 
@@ -26,6 +27,9 @@ import SearchBox from '@/base/search-box/search-box';
 import { getHotKey } from  '@/api/search';
 import { ERR_OK } from '@/api/config';
 import Suggest from 'components/suggest/suggest';
+import { calculateSize } from '@/common/js/size';
+
+const BOTTOM = calculateSize(120);
 
 export default {
   data() {
@@ -40,6 +44,9 @@ export default {
     },
     onQueryChange(query) {
       this.query = query;
+    },
+    blurInput() {
+      this.$refs.searchBox.blur();
     },
     _getHotKey() {
       getHotKey().then(res => {
