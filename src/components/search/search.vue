@@ -74,7 +74,7 @@ export default {
     .search-box-wrapper
       margin: 40px
     .shortcut-wrapper
-      position: fixed
+      position: absolute
       top: 356px
       bottom: 0
       width: 100%
