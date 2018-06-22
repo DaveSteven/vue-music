@@ -53,41 +53,29 @@ import SearchList from '@/base/search-list/search-list';
 import Confirm from '@/base/confirm/confirm';
 import Scroll from '@/base/scroll/scroll';
 import { calculateSize } from 'common/js/size';
-import { mapActions, mapGetters } from 'vuex';
-import { playlistMixin } from 'common/js/mixin';
+import { mapActions } from 'vuex';
+import { playlistMixin, searchMixin } from 'common/js/mixin';
 
 const BOTTOM = calculateSize(120);
 
 export default {
   mixins: [
-    playlistMixin
+    playlistMixin,
+    searchMixin
   ],
   data() {
     return {
-      hotKey: [],
-      query: ''
+      hotKey: []
     };
   },
   computed: {
     shortcut() {
       return this.hotKey.concat(this.searchHistory);
-    },
-    ...mapGetters([
-      'searchHistory'
-    ])
+    }
   },
   methods: {
-    addQuery(query) {
-      this.$refs.searchBox.setQuery(query);
-    },
     onQueryChange(query) {
       this.query = query;
-    },
-    blurInput() {
-      this.$refs.searchBox.blur();
-    },
-    saveSearch() {
-      this.saveSearchHistory(this.query);
     },
     showConfirm() {
       this.$refs.confirm.show();
@@ -107,8 +95,6 @@ export default {
       });
     },
     ...mapActions([
-      'saveSearchHistory',
-      'deleteSearchHistory',
       'clearSearchHistory'
     ])
   },
