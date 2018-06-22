@@ -55,8 +55,7 @@ export default {
       result: [],
       pullup: true,
       beforeScroll: true,
-      hasMore: true,
-      refresh: false
+      hasMore: true
     };
   },
   methods: {
@@ -101,6 +100,9 @@ export default {
     },
     listScroll() {
       this.$emit('listScroll');
+    },
+    refresh() {
+      this.$refs.suggest.refresh();
     },
     _search() {
       this.page = 1;
