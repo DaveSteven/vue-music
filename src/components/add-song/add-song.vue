@@ -13,9 +13,14 @@
       <div class="shortcut" v-show="!query">
         <switches :currentIndex="currentIndex" :switches="switches" @switch="switchItem"></switches>
         <div class="list-wrapper">
-          <scroll class="list-scroll" v-if="currentIndex === 0" :data="playHistory">
+          <scroll ref="songList" class="list-scroll" v-if="currentIndex === 0" :data="playHistory">
             <div class="list-inner">
               <song-list :songs="playHistory" @select="selectSong"></song-list>
+            </div>
+          </scroll>
+          <scroll ref="searchList" class="list-scroll" v-if="currentIndex === 1" :data="searchHistory">
+            <div class="list-inner">
+              <search-list @delete="deleteSearchHistory" @select="addQuery" :searches="searchHistory"></search-list>
             </div>
           </scroll>
         </div>
@@ -33,6 +38,7 @@ import Suggest from 'components/suggest/suggest';
 import Switches from '@/base/switches/switches';
 import Scroll from '@/base/scroll/scroll';
 import SongList from '@/base/song-list/song-list';
+import SearchList from '@/base/search-list/search-list';
 import { searchMixin } from 'common/js/mixin';
 import { mapGetters, mapActions } from 'vuex';
 import Song from 'common/js/song';
@@ -58,12 +64,20 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'playHistory'
+      'playHistory',
+      'searchHistory'
     ])
   },
   methods: {
     show() {
       this.showFlag = true;
+      setTimeout(() => {
+        if (this.currentIndex === 0) {
+          this.$refs.songList.refresh();
+        } else {
+          this.$refs.searchList.refresh();
+        }
+      }, 20);
     },
     hide() {
       this.showFlag = false;
@@ -80,12 +94,24 @@ export default {
       'insertSong'
     ])
   },
+  watch: {
+    query(newQuery) {
+      if (this.currentIndex === 1) {
+        if (!newQuery) {
+          setTimeout(() => {
+            this.$refs.searchList.refresh();
+          });
+        }
+      }
+    }
+  },
   components: {
     SearchBox,
     Suggest,
     Switches,
     Scroll,
-    SongList
+    SongList,
+    SearchList
   }
 };
 </script>
