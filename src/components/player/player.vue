@@ -377,6 +377,7 @@ export default {
           offsetWidth = -window.innerWidth;
         }
       }
+      delete this.touch.percent;
       const lyricList = this.$refs.lyricList.$el;
       const time = 300;
       lyricList.style[transitionDuration] = `${time}ms`;
@@ -564,7 +565,7 @@ export default {
                 color: $color-text
       .bottom
         position: absolute
-        bottom: 100px
+        bottom: 50px
         width: 100%
         .dot-wrapper
           text-align: center
