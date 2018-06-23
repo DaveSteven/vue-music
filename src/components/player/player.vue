@@ -107,7 +107,7 @@
     </transition>
     <playlist ref="playlist"></playlist>
     <!-- html5 audio组件，播放音乐 -->
-    <audio ref="audio" :src="currentSongUrl" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <audio ref="audio" :src="currentSongUrl" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -191,6 +191,7 @@ export default {
       }
       if (this.playlist.length === 1) {
         this.loop();
+        return;
       } else {
         let index = this.currentIndex - 1;
         if (index < 0) {
@@ -209,6 +210,7 @@ export default {
       }
       if (this.playlist.length === 1) {
         this.loop();
+        return;
       } else {
         let index = this.currentIndex + 1;
         if (index === this.playlist.length) {
@@ -301,6 +303,9 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
+        if (this.currentSong.lyric !== lyric) {
+          return;
+        }
         this.currentLyric = new Lyric(lyric, this.handleLyric);
         if (this.playing) {
           this.currentLyric.play();
@@ -414,8 +419,11 @@ export default {
     ])
   },
   watch: {
-    currentSong(newSong) {
+    currentSong(newSong, oldSong) {
       if (!newSong.id) {
+        return;
+      }
+      if (newSong.id === oldSong.id) {
         return;
       }
       this.getSongURL();
@@ -423,8 +431,12 @@ export default {
     currentSongUrl() {
       if (this.currentLyric) {
         this.currentLyric.stop();
+        this.currentTime = 0;
+        this.playingLyric = '';
+        this.currentLineNumber = 0;
       }
-      setTimeout(() => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
         this.$refs.audio.play();
         this.getLyric();
       }, 1000);
