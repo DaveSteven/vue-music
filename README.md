@@ -1,21 +1,12 @@
 # vue-music
 
-> 音乐播放器
+> Vue.js开发的音乐播放器
+> 来自滴滴黄老师的慕课网视频教程，视频地址：[https://coding.imooc.com/class/107.html](https://coding.imooc.com/class/107.html)
 
-## Build Setup
+# 技术栈
 
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+> Vue.js(版本2.x)
+> Vuex
+> Vue Router
+> 服务端通讯：axios, jsonp
+> 移动端滚动库：[better-scroll](https://github.com/ustbhuangyi/better-scroll)
