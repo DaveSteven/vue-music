@@ -59,14 +59,14 @@ export const playerMixin = {
       this.setCurrentIndex(index);
     },
     toggleFavorite(song) {
-      if (this.isFavorite(song) > -1) {
+      if (this.isFavorite(song)) {
         this.deleteFavoriteList(song);
       } else {
         this.saveFavoriteList(song);
       }
     },
     getFavoriteIcon(song) {
-      if (this.isFavorite(song) > -1) {
+      if (this.isFavorite(song)) {
         return 'icon-favorite';
       } else {
         return 'icon-not-favorite';

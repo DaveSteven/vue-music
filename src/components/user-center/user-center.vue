@@ -13,7 +13,10 @@
       </div>
       <div class="list-wrapper" ref="listWrapper">
         <scroll ref="favoriteList" class="list-scroll" :data="favoriteList" v-if="currentIndex === 0">
-          <song-list class="list-inner" :songs="favoriteList"></song-list>
+          <song-list @select="selectSong" class="list-inner" :songs="favoriteList"></song-list>
+        </scroll>
+        <scroll ref="playlist" class="list-scroll" :data="playlist" v-if="currentIndex === 1">
+          <song-list @select="selectSong" class="list-inner" :songs="playlist"></song-list>
         </scroll>
       </div>
     </div>
@@ -24,8 +27,9 @@
 import Switches from '@/base/switches/switches';
 import Scroll from '@/base/scroll/scroll';
 import SongList from '@/base/song-list/song-list';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import { playlistMixin } from 'common/js/mixin';
+import Song from 'common/js/song';
 
 export default {
   mixins: [
@@ -46,7 +50,8 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'favoriteList'
+      'favoriteList',
+      'playlist'
     ])
   },
   methods: {
@@ -56,11 +61,21 @@ export default {
     back() {
       this.$router.back();
     },
+    selectSong(song) {
+      this.insertSong(new Song(song));
+    },
     handlePlaylist(playlist) {
       const bottom = playlist.length ? '60px' : '';
       this.$refs.listWrapper.style.bottom = bottom;
-      this.$refs.favoriteList.refresh();
-    }
+      if (this.currentIndex === 0) {
+        this.$refs.favoriteList.refresh();
+      } else {
+        this.$refs.playlist.refresh();
+      }
+    },
+    ...mapActions([
+      'insertSong'
+    ])
   },
   components: {
     Switches,
