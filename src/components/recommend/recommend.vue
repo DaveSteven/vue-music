@@ -45,6 +45,7 @@ import { playlistMixin } from 'common/js/mixin';
 import { mapMutations } from 'vuex';
 
 export default {
+  name: 'recommend',
   mixins: [
     playlistMixin
   ],

@@ -59,6 +59,7 @@ import { playlistMixin, searchMixin } from 'common/js/mixin';
 const BOTTOM = calculateSize(120);
 
 export default {
+  name: 'search',
   mixins: [
     playlistMixin,
     searchMixin

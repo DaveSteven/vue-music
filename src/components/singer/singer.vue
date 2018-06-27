@@ -17,6 +17,7 @@ const HOT_NAME = '热门';
 const HOT_SINGER_LEN = 10;
 
 export default {
+  name: 'singer',
   mixins: [
     playlistMixin
   ],
